@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue-Green Deployment</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            text-align: center;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #172554;
+            margin-bottom: 15px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .version {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 25px;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        .status {
+            color: #15803d;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        footer {
+            margin-top: 30px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Blue-Green Deployment</h1>
+
+        <p class="subtitle">
+            Automated deployment strategy using
+            Jenkins, Docker and Kubernetes.
+        </p>
+
+        <div class="version">
+            Active Version: VERSION_PLACEHOLDER
+        </div>
+
+        <p class="status">
+            Application Running Successfully
+        </p>
+
+        <div class="details">
+            <p>Deployment Strategy: Blue-Green</p>
+            <p>Container Platform: Docker</p>
+            <p>Orchestration: Kubernetes</p>
+            <p>Automation: Jenkins CI/CD</p>
+        </div>
+
+        <footer>
+            Automated Blue-Green Deployment Project
+        </footer>
+
+    </div>
+
+</body>
+</html>
