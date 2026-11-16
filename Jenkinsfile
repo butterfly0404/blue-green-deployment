@@ -26,13 +26,26 @@ pipeline {
                     def result = powershell(
                         returnStdout: true,
                         script: '''
-                            $color = kubectl get service blue-green-service -o jsonpath="{.spec.selector.version}" 2>$null
+                            $serviceJson = kubectl get service blue-green-service -o json --ignore-not-found 2>$null
 
-                            if ($LASTEXITCODE -ne 0 -or !$color) {
+                            if ($LASTEXITCODE -ne 0) {
+                                throw "Could not query Kubernetes service"
+                            }
+
+                            if ([string]::IsNullOrWhiteSpace($serviceJson)) {
                                 Write-Output "none"
                             } else {
+                                $service = $serviceJson | ConvertFrom-Json
+                                $color = $service.spec.selector.version
+
+                                if (!$color) {
+                                    throw "Service has no version selector"
+                                }
+
                                 Write-Output $color
                             }
+
+                            $global:LASTEXITCODE = 0
                         '''
                     ).trim()
 
@@ -73,9 +86,13 @@ pipeline {
         stage('Create Service If Missing') {
             steps {
                 powershell '''
-                    kubectl get service blue-green-service 2>$null
+                    $serviceJson = kubectl get service blue-green-service -o json --ignore-not-found 2>$null
 
                     if ($LASTEXITCODE -ne 0) {
+                        throw "Could not query Kubernetes service"
+                    }
+
+                    if ([string]::IsNullOrWhiteSpace($serviceJson)) {
                         Write-Output "Creating initial Kubernetes service"
 
                         kubectl apply -f k8s/service.yaml
@@ -84,7 +101,7 @@ pipeline {
                             throw "Service creation failed"
                         }
                     } else {
-                        Write-Output "Existing service preserved; traffic selector will not be reset"
+                        Write-Output "Existing service preserved"
                     }
                 '''
             }
