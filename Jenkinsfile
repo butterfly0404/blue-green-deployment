@@ -44,8 +44,6 @@ pipeline {
 
                                 Write-Output $color
                             }
-
-                            $global:LASTEXITCODE = 0
                         '''
                     ).trim()
 
@@ -210,22 +208,13 @@ spec:
                 powershell '''
                     $color = $env:NEW_COLOR
 
-                    $patch = @{
-                        spec = @{
-                            selector = @{
-                                app = "blue-green-app"
-                                version = $color
-                            }
-                        }
-                    } | ConvertTo-Json -Compress
-
-                    kubectl patch service blue-green-service --type=merge -p $patch
+                    kubectl set selector service/blue-green-service "app=blue-green-app,version=$color"
 
                     if ($LASTEXITCODE -ne 0) {
                         throw "Traffic switching failed"
                     }
 
-                    Write-Output "Traffic switched to $color"
+                    Write-Output "Traffic successfully switched to $color"
                 '''
 
                 script {
@@ -237,6 +226,16 @@ spec:
         stage('Verify Live Deployment') {
             steps {
                 powershell '''
+                    Write-Output "Checking active Service selector..."
+
+                    $active = kubectl get service blue-green-service -o jsonpath="{.spec.selector.version}"
+
+                    if ($LASTEXITCODE -ne 0 -or $active -ne $env:NEW_COLOR) {
+                        throw "Service selector verification failed"
+                    }
+
+                    Write-Output "Active environment: $active"
+
                     kubectl get pods -o wide
                     kubectl get service blue-green-service
                     kubectl get endpoints blue-green-service
@@ -247,7 +246,7 @@ spec:
                         throw "Service has no active endpoints"
                     }
 
-                    Write-Output "Live traffic is reaching the new environment"
+                    Write-Output "Live traffic is reaching $active"
                 '''
             }
         }
@@ -262,35 +261,26 @@ spec:
                     powershell '''
                         $color = $env:OLD_COLOR
 
-                        $patch = @{
-                            spec = @{
-                                selector = @{
-                                    app = "blue-green-app"
-                                    version = $color
-                                }
-                            }
-                        } | ConvertTo-Json -Compress
-
-                        kubectl patch service blue-green-service --type=merge -p $patch
+                        kubectl set selector service/blue-green-service "app=blue-green-app,version=$color"
 
                         if ($LASTEXITCODE -ne 0) {
-                            throw "Rollback failed"
+                            throw "Automatic rollback failed"
                         }
 
-                        Write-Output "Traffic restored to $color"
+                        Write-Output "Traffic successfully restored to $color"
                     '''
                 } else {
-                    echo 'No traffic switch occurred; previous service selection remains unchanged.'
+                    echo 'No traffic switch completed. Previous Service selection remains unchanged.'
                 }
             }
         }
 
         success {
-            echo 'Blue-Green deployment completed successfully!'
+            echo 'SUCCESS: Blue-Green deployment completed!'
         }
 
         always {
-            echo 'Pipeline execution finished.'
+            echo 'Blue-Green pipeline execution finished.'
         }
     }
 }
